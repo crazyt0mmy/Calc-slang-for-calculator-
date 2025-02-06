@@ -10,12 +10,15 @@
    ; Variabili per i numeri e le operazioni
    VAR1 DW ?            ; Primo numero (16 bit per numeri fino a 65535)
    VAR2 DW ?            ; Secondo numero (16 bit per numeri fino a 65535)
+   SEGNO1 DB ?          ; Memorizza il segno del primo numero 
+   SEGNO2 DB ?          ; Memorizza il segno del secondo numero
    OPERATORE DB ?       ; Memorizza l'operatore scelto (+, -, *, /)
-   RIS DW ?             ; Risultato dell'operazione (16 bit)
+   RIS1 DW ?            ; Risultato dell'operazione prima della conversione
+   RIS2 DW ?            ; Risultato dell'operazione dopo la conversione
    
    ; Messaggi per l'interfaccia utente
    MSG_OPP DB 0Dh, 0Ah, '*Inserire quale operazione si vuole eseguire (+,-,*,/):  $' 
-   MSG1 DB 0Dh, 0Ah, '*Inserire il primo numero: $'
+   MSG1 DB 0Dh, 0Ah, '*Inserire il primo numero (65535): $'
    MSG2 DB 0Dh, 0Ah, '*Inserire il secondo numero: $'
    MSG_RIS DB 0Dh, 0Ah, '*Il risultato corrisponde a: $'
    MSG_ERR1 DB 0Dh, 0Ah, '*Operatore errato, inserirne un operatore valido: $'
@@ -114,26 +117,26 @@ Leggi_Numeri:
 Addizione: 
     MOV AX, VAR1
     ADD AX, VAR2
-    MOV RIS, AX
+    MOV RIS1, AX
     JMP Stampa_ris
         
 Sottrazione:
     MOV AX, VAR1
     SUB AX, VAR2
-    MOV RIS, AX
+    MOV RIS1, AX
     JMP Stampa_ris
     
 Moltiplicazione: 
     MOV AX, VAR1
     MUL VAR2        ; Risultato in DX:AX
-    MOV RIS, AX     ; Salva solo la parte bassa
+    MOV RIS1, AX     ; Salva solo la parte bassa
     JMP Stampa_ris
     
 Divisione:
     MOV DX, 0       ; Pulisce DX per la divisione
     MOV AX, VAR1
     DIV VAR2        ; Quoziente in AX, resto in DX
-    MOV RIS, AX
+    MOV RIS1, AX
     JMP Stampa_ris
 
 ;------------------------------------------------------------------------------------------
@@ -142,12 +145,11 @@ Divisione:
 ;------------------------------------------------------------------------------------------ 
 
 ; Procedura per leggere numeri multi-cifra
-LeggiNumero PROC
+LeggiNumero PROC 
     PUSH BX         ; Salva i registri
     PUSH CX
     
     MOV BX, 0       ; Inizializza il risultato
-    MOV CX, 0       ; Inizializza il contatore
     
 LeggiCifra:
     MOV AH, 01h     ; Legge un carattere
@@ -173,7 +175,13 @@ FineLeggi:
     POP CX          ; Ripristina i registri
     POP BX
     RET
-LeggiNumero ENDP
+LeggiNumero ENDP 
+
+
+;Procedure per convertire il risultato da ASCII in un risultato numerico
+Conversione PROC 
+    
+    
 
 ;------------------------------------------------------------------------------------------
 ; SEZIONE STAMPA RISULTATO
@@ -183,7 +191,13 @@ LeggiNumero ENDP
 Stampa_ris:
     MOV AH, 09H
     LEA DX, MSG_RIS
-    INT 21H
+    INT 21H   
+    
+    ;Il risultato viene convertito per stamparlo 
+    MOV AX, RIS1
+    CALL Conversione 
+    
+    JMP Fine
     
 ;------------------------------------------------------------------------------------------
 ; SEZIONE FINE PROGRAMMA
