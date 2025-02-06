@@ -177,11 +177,48 @@ FineLeggi:
     RET
 LeggiNumero ENDP 
 
-
-;Procedure per convertire il risultato da ASCII in un risultato numerico
+;Procedura per convertire e stampare il risultato con gestione del complemento A2
 Conversione PROC 
+    PUSH BX           ; Salva i registri
+    PUSH CX
+    PUSH DX
     
+    ; Controlla se il numero è negativo
+    TEST AX, 8000h    
+    JZ PositiveNum    
     
+    ; Gestione numero negativo
+    PUSH AX           
+    MOV DL, '-'       
+    MOV AH, 02h       
+    INT 21h           
+    POP AX            
+    NEG AX            ; Converti in positivo
+    
+PositiveNum:    
+    XOR CX, CX       ; Inizializza contatore
+    MOV BX, 10       ; Divisore = 10
+    
+DividiNum:
+    XOR DX, DX       ; Pulisci DX prima della divisione
+    DIV BX           ; AX / 10
+    ADD DX, 48       ; Converti in ASCII
+    PUSH DX          ; Salva la cifra nello stack
+    INC CX           ; Incrementa contatore
+    OR AX, AX        ; Verifica se AX è zero
+    JNZ DividiNum    ; Se non è zero, continua
+    
+StampaNum:    
+    POP DX           ; Recupera cifra
+    MOV AH, 02h      ; Funzione stampa carattere
+    INT 21h          ; Stampa
+    LOOP StampaNum   ; Ripeti per tutte le cifre
+    
+    POP DX           ; Ripristina registri
+    POP CX
+    POP BX
+    RET              
+Conversione ENDP
 
 ;------------------------------------------------------------------------------------------
 ; SEZIONE STAMPA RISULTATO
