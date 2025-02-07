@@ -8,3 +8,6 @@ Root: In making
 
 Square: In making
 
+Exponential: In making
+
+Stay tuned for new releases.
