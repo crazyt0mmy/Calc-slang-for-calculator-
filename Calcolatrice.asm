@@ -221,27 +221,38 @@ Moltiplicazione:
     CMP SEGNO1, '-'
     JE PrimoNegativo3
     CMP SEGNO2, '-'
-    JE PrimoNegativo3 
+    JE SecondoNegativo3 
     
+    ; Caso 1: Entrambi positivi
     MOV AX, BX       
-    MUL CX      
+    IMUL CX      
     MOV RIS1, AX     
     JMP FineMoltiplicazione
     
+     ; Caso 2: Primo negativo, secondo positivo
 PrimoNegativo3:
     CMP SEGNO2, '-'   
     JE EntrambiNegativi3
 
     NEG BX            
     MOV AX, BX        
-    MUL CX       
+    IMUL CX       
     MOV RIS1, AX     
-    JMP FineMoltiplicazione
-
+    JMP FineMoltiplicazione 
     
+    ; Caso 3: Primo positivo, secondo negativo
+SecondoNegativo3:
+
+    NEG BX            
+    MOV AX, BX        
+    IMUL CX       
+    MOV RIS1, AX     
+    JMP FineMoltiplicazione 
+    
+    ; Caso 4: Entrambi negativi
 EntrambiNegativi3:
     MOV AX, BX        
-    MUL CX        
+    IMUL CX        
     MOV RIS1, AX      
     
 FineMoltiplicazione:
@@ -250,16 +261,73 @@ FineMoltiplicazione:
          
     JMP Stampa_ris
     
-;-------------------------------------------------------------------------------
-;Divisione
-;-------------------------------------------------------------------------------
+;-------------------------------------------------------------------------------   
+
+    ;MOV DX, 0       
+    ;MOV AX, VAR1
+    ;DIV VAR2        
+    ;MOV RIS1, AX
+    ;JMP Stampa_ris                    
     
+;Divisione
+;------------------------------------------------------------------------------- 
+   
 Divisione:
-    MOV DX, 0       
-    MOV AX, VAR1
-    DIV VAR2        
+    PUSH BX
+    PUSH CX
+
+    MOV BX, 0
+    MOV CX, 0
+    MOV DX, 0  ; Imposta DX a 0 per la divisione corretta
+
+    MOV BX, VAR1 
+    MOV CX, VAR2 
+    CMP SEGNO1, '-'
+    JE PrimoNegativo4
+    CMP SEGNO2, '-'
+    JE SecondoNegativo4
+    
+    ; Caso 1: Entrambi positivi      
+    MOV AX, BX
+    IDIV CX
     MOV RIS1, AX
+    JMP FineDivisione
+    
+    ; Caso 2: Primo negativo, secondo positivo 
+PrimoNegativo4:
+    CMP SEGNO2, '-'   
+    JE EntrambiNegativi4
+            
+    MOV AX, BX        
+    IDIV CX
+    NEG AX       
+    MOV RIS1, AX     
+    JMP FineDivisione
+    
+    ; Caso 3: Primo positivo, secondo negativo
+SecondoNegativo4:    
+    NEG CX            
+    MOV AX, BX        
+    IDIV CX       
+    MOV RIS1, AX     
+    JMP FineDivisione
+
+    ; Caso 4: Entrambi negativi
+EntrambiNegativi4:
+    MOV AX, BX        
+    IDIV CX        
+    MOV RIS1, AX      ; Il risultato rimane positivo
+    
+FineDivisione:
+    POP BX
+    POP CX
+         
     JMP Stampa_ris
+
+    
+;------------------------------------------------------------------------------- 
+;Stampa del risultato
+;------------------------------------------------------------------------------- 
 
 Stampa_ris:
     MOV AH, 09H
