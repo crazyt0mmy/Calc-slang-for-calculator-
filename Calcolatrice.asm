@@ -18,8 +18,6 @@
    MSG_ERR1 DB 0Dh, 0Ah, 'Operatore errato, inserirne un operatore valido: $'
    CONTORNO DB '------------------------CALCOLATRICE------------------------$'
    
-   INTERFACCIA DB 0Dh, 0Ah,
-   
 .CODE
 .STARTUP 
     MOV AX, @DATA
