@@ -9,14 +9,16 @@
    OPERATORE DB ?       
    RIS1 DW ?            
    
-   MSG_OPP DB 0Dh, 0Ah, '*Inserire quale operazione si vuole eseguire (+,-,*,/):  $' 
-   MSG1 DB 0Dh, 0Ah, '*Inserire il primo numero: $'
-   MSG2 DB 0Dh, 0Ah, '*Inserire il secondo numero: $'
-   MSG3 DB 0Dh, 0Ah, '*Inserire il segno del primo numero (+,-): $'
-   MSG4 DB 0Dh, 0Ah, '*Inserire il segno del secondo numero (+,-): $'
-   MSG_RIS DB 0Dh, 0Ah, '*Il risultato corrisponde a: $'
-   MSG_ERR1 DB 0Dh, 0Ah, '*Operatore errato, inserirne un operatore valido: $'
+   MSG_OPP DB 0Dh, 0Ah, 'Inserire quale operazione si vuole eseguire (+,-,*,/):  $' 
+   MSG1 DB 0Dh, 0Ah, 'Inserire il primo numero: $'
+   MSG2 DB 0Dh, 0Ah, 'Inserire il secondo numero: $'
+   MSG3 DB 0Dh, 0Ah, 'Inserire il segno del primo numero (+,-): $'
+   MSG4 DB 0Dh, 0Ah, 'Inserire il segno del secondo numero (+,-): $'
+   MSG_RIS DB 0Dh, 0Ah, '+--------------------------+ $'
+   MSG_ERR1 DB 0Dh, 0Ah, 'Operatore errato, inserirne un operatore valido: $'
    CONTORNO DB '------------------------CALCOLATRICE------------------------$'
+   
+   INTERFACCIA DB 0Dh, 0Ah,
    
 .CODE
 .STARTUP 
@@ -278,7 +280,7 @@ Divisione:
 
     MOV BX, 0
     MOV CX, 0
-    MOV DX, 0  ; Imposta DX a 0 per la divisione corretta
+    MOV DX, 0  
 
     MOV BX, VAR1 
     MOV CX, VAR2 
@@ -316,7 +318,7 @@ SecondoNegativo4:
 EntrambiNegativi4:
     MOV AX, BX        
     IDIV CX        
-    MOV RIS1, AX      ; Il risultato rimane positivo
+    MOV RIS1, AX      
     
 FineDivisione:
     POP BX
@@ -332,10 +334,59 @@ FineDivisione:
 Stampa_ris:
     MOV AH, 09H
     LEA DX, MSG_RIS
-    INT 21H   
+    INT 21H
+    
+     ; Vai a capo (Carriage Return + Line Feed)
+    MOV DL, 0Dh        ; Carriage Return (CR)
+    MOV AH, 02h        ; Funzione di stampa
+    INT 21h            ; Stampa il carattere (CR)
+    
+    MOV DL, 0Ah        ; Line Feed (LF)
+    MOV AH, 02h        ; Funzione di stampa
+    INT 21h            ; Stampa il carattere (LF)
+    
+    MOV DL, 7Ch        ; Carattere '|' (codice ASCII 7Ch)
+    MOV AH, 02h        ; Funzione di stampa
+    INT 21h            ; Stampa il carattere '|'                    
+    
+    MOV DL, SEGNO1  
+    MOV AH, 02h   
+    INT 21h       
+    
+    MOV AX, VAR1
+    CALL Conversione
+    
+    ; Stampa uno spazio
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio 
+    
+    MOV DL, OPERATORE  
+    MOV AH, 02h  
+    INT 21h 
+    
+    ; Stampa uno spazio
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio     
+    
+    MOV DL, SEGNO2  
+    MOV AH, 02h   
+    INT 21h       
+    
+    MOV AX, VAR2
+    CALL Conversione 
+    
+    MOV DL, 3Dh       ; Carattere '=' (codice ASCII 3Dh)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa il carattere   
     
     MOV AX, RIS1
     CALL Conversione 
+    
+    MOV AH, 09H
+    LEA DX, MSG_RIS
+    INT 21H
     
     JMP Fine
                   
@@ -346,6 +397,8 @@ Fine:
 ;-------------------------------------------------------------------------------
 ;Procedure di supporto 
 ;-------------------------------------------------------------------------------   
+
+; Procedura per leggere i numeri
     
 LeggiNumero PROC 
     PUSH BX         
@@ -377,6 +430,8 @@ FineLeggi:
     POP BX
     RET
 LeggiNumero ENDP
+
+; Procedura per stampare numeri negativo
 
 Conversione PROC 
     PUSH BX           
