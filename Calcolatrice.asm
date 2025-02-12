@@ -1,22 +1,36 @@
 .MODEL SMALL
 .STACK 100h
  
-.DATA 
+.DATA
+   ;Dati operazioni + interfaccia grafica 
    VAR1 DW ?            
    VAR2 DW ?            
    SEGNO1 DB ?          
    SEGNO2 DB ?          
    OPERATORE DB ?       
-   RIS1 DW ?            
+   RIS1 DW ?
+   NUM1 DW 1
+   NUM2 DW ?            
    
-   MSG_OPP DB 0Dh, 0Ah, 'Inserire quale operazione si vuole eseguire (+,-,*,/):  $' 
+   MSG_OPP1 DB 0Dh, 0Ah, 'Inserire quale operazione si vuole eseguire: $'
+   MSG_OPP2 DB 0Dh, 0Ah, '[1] Addizione$'
+   MSG_OPP3 DB 0Dh, 0Ah, '[2] Sottrazione$'
+   MSG_OPP4 DB 0Dh, 0Ah, '[3] Moltiplicazione$'
+   MSG_OPP5 DB 0Dh, 0Ah, '[4] Divisione$'
+   MSG_OPP6 DB 0Dh, 0Ah, '[5] Radice Quadrata$'
+   MSG_OPP7 DB 0Dh, 0Ah, '[6] Radice Cubica$'
+   MSG_OPP8 DB 0Dh, 0Ah, '[7] Logaritmo$'
+   MSG_OPP9 DB 0Dh, 0Ah, '[8] Potenza$'
    MSG1 DB 0Dh, 0Ah, 'Inserire il primo numero: $'
    MSG2 DB 0Dh, 0Ah, 'Inserire il secondo numero: $'
    MSG3 DB 0Dh, 0Ah, 'Inserire il segno del primo numero (+,-): $'
    MSG4 DB 0Dh, 0Ah, 'Inserire il segno del secondo numero (+,-): $'
+   MSG5 DB 0Dh, 0Ah, 'Radice quadrata di $'
    MSG_RIS DB 0Dh, 0Ah, '+--------------------------+ $'
    MSG_ERR1 DB 0Dh, 0Ah, 'Operatore errato, inserirne un operatore valido: $'
-   CONTORNO DB '------------------------CALCOLATRICE------------------------$'
+   CONTORNO DB '------------------------CALCOLATRICE------------------------$'    
+   
+    
    
 .CODE
 .STARTUP 
@@ -33,23 +47,66 @@
 
 Richiedi_Operatore:
     MOV AH, 09H
-    LEA DX, MSG_OPP
+    LEA DX, MSG_OPP1
+    INT 21H  
+    
+    MOV AH, 09H
+    LEA DX, MSG_OPP2
     INT 21H 
+    
+    MOV AH, 09H
+    LEA DX, MSG_OPP3
+    INT 21H 
+    
+    MOV AH, 09H
+    LEA DX, MSG_OPP4
+    INT 21H 
+    
+    MOV AH, 09H
+    LEA DX, MSG_OPP5
+    INT 21H 
+    
+    MOV AH, 09H
+    LEA DX, MSG_OPP6
+    INT 21H 
+    
+    MOV AH, 09H
+    LEA DX, MSG_OPP7
+    INT 21H  
+        
+    MOV AH, 09H
+    LEA DX, MSG_OPP8
+    INT 21H
+    MOV AH, 09H
+    LEA DX, MSG_OPP9
+    INT 21H
     
     MOV AH, 01H
     INT 21H
     MOV OPERATORE, AL    
     
-    CMP AL, '+'
+    CMP AL, '1'
     JE Leggi_Numeri
      
-    CMP AL, '-'
+    CMP AL, '2'
     JE Leggi_Numeri
     
-    CMP AL, '*'
+    CMP AL, '3'
     JE Leggi_Numeri 
     
-    CMP AL, '/'
+    CMP AL, '4'
+    JE Leggi_Numeri 
+      
+    CMP AL, '5'
+    JE Leggi_Numeri
+      
+    CMP AL, '6'
+    JE Leggi_Numeri
+      
+    CMP AL, '7'
+    JE Leggi_Numeri
+      
+    CMP AL, '8'
     JE Leggi_Numeri
     
     MOV AH, 09H
@@ -76,6 +133,11 @@ Leggi_Numeri:
     CALL LeggiNumero
     MOV VAR1, AX
     
+    CMP OPERATORE, '5'
+    JE Radice2
+    CMP OPERATORE, '6'
+    JE Radice3
+    
     MOV AH, 09H
     LEA DX, MSG4
     INT 21H
@@ -92,16 +154,16 @@ Leggi_Numeri:
     
     MOV AL, OPERATORE
     
-    CMP AL, '+'
+    CMP OPERATORE, '1'
     JE Addizione 
     
-    CMP AL, '-'
+    CMP OPERATORE, '2'
     JE Sottrazione
     
-    CMP AL, '*'
+    CMP OPERATORE, '3'
     JE Moltiplicazione 
     
-    CMP AL, '/'
+    CMP OPERATORE, '4'
     JE Divisione 
     
 ;-------------------------------------------------------------------------------
@@ -153,7 +215,7 @@ EntrambiNegativi:
 FineAddizione: 
     POP BX
     POP CX
-    JMP Stampa_ris  
+    JMP Conv_opp  
     
 ;-------------------------------------------------------------------------------
 ;Sottrazione
@@ -203,7 +265,7 @@ EntrambiNegativi2:
 FineSottrazione: 
     POP BX
     POP CX
-    JMP Stampa_ris  
+    JMP Conv_opp  
     
 ;-------------------------------------------------------------------------------
 ;Moltiplicazione
@@ -259,16 +321,9 @@ FineMoltiplicazione:
     POP BX
     POP CX
          
-    JMP Stampa_ris
+    JMP Conv_opp
     
-;-------------------------------------------------------------------------------   
-
-    ;MOV DX, 0       
-    ;MOV AX, VAR1
-    ;DIV VAR2        
-    ;MOV RIS1, AX
-    ;JMP Stampa_ris                    
-    
+;-------------------------------------------------------------------------------                                         
 ;Divisione
 ;------------------------------------------------------------------------------- 
    
@@ -322,13 +377,85 @@ FineDivisione:
     POP BX
     POP CX
          
-    JMP Stampa_ris
+    JMP Conv_opp
+ 
+;-------------------------------------------------------------------------------  
+; Operazoini avanzate
+;------------------------------------------------------------------------------- 
+; Radici 
+;------------------------------------------------------------------------------- 
+; Procedura per calcolare la radice quadrata
+Radice2:
+    PUSH BX          ; Salva i registri che useremo
+    PUSH CX
+    PUSH DX
+    
+    MOV AX, VAR1     ; Numero di cui calcolare la radice
+    MOV BX, 1        ; Contatore che incrementeremo (la nostra X)
+    
+Ciclo_Radice:
+    MOV AX, BX       ; Metti il contatore in AX per la moltiplicazione
+    IMUL BX          ; AX = AX * BX (il quadrato del contatore)
+    
+    CMP AX, VAR1     ; Confronta il quadrato con il numero originale
+    JA Trovato       ; Se è maggiore, abbiamo superato la radice
+    JE Trovato_Esatto; Se è uguale, abbiamo trovato la radice esatta
+    
+    INC BX           ; Incrementa il contatore
+    JMP Ciclo_Radice ; Continua il ciclo
+    
+Trovato_Esatto:
+    MOV RIS1, BX     ; Salva il risultato
+    JMP Fine_Radice
+    
+Trovato:
+    DEC BX           ; Decrementa BX per ottenere l'ultimo valore valido
+    MOV RIS1, BX     ; Salva il risultato
+    
+Fine_Radice:
+    POP DX           ; Ripristina i registri
+    POP CX
+    POP BX
+    JMP Stampa_ris_radice   ; Vai alla stampa del risultato
+    
+Radice3:
 
     
 ;------------------------------------------------------------------------------- 
 ;Stampa del risultato
 ;------------------------------------------------------------------------------- 
 
+;Convertire operatore nel segno adatto
+Conv_opp:
+    CMP OPERATORE, '1'
+    JE AD
+    
+    CMP OPERATORE, '2'
+    JE SO
+    
+    CMP OPERATORE, '3'
+    JE MU
+    
+    CMP OPERATORE, '4'
+    JE DV
+    
+AD:
+    MOV AL, '+'
+    MOV OPERATORE, AL
+    JMP Stampa_ris
+SO: 
+    MOV AL, '-'
+    MOV OPERATORE, AL
+    JMP Stampa_ris
+MU:
+    MOV AL, '*'
+    MOV OPERATORE, AL 
+    JMP Stampa_ris
+DV:    
+    MOV AL, '/'
+    MOV OPERATORE, AL
+    JMP Stampa_ris
+    
 Stampa_ris:
     MOV AH, 09H
     LEA DX, MSG_RIS
@@ -342,11 +469,7 @@ Stampa_ris:
     MOV DL, 0Ah        ; Line Feed (LF)
     MOV AH, 02h        ; Funzione di stampa
     INT 21h            ; Stampa il carattere (LF)
-    
-    MOV DL, 7Ch        ; Carattere '|' (codice ASCII 7Ch)
-    MOV AH, 02h        ; Funzione di stampa
-    INT 21h            ; Stampa il carattere '|'                    
-    
+
     MOV DL, SEGNO1  
     MOV AH, 02h   
     INT 21h       
@@ -373,11 +496,56 @@ Stampa_ris:
     INT 21h       
     
     MOV AX, VAR2
-    CALL Conversione 
+    CALL Conversione
+    
+    ; Stampa uno spazio
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio 
     
     MOV DL, 3Dh       ; Carattere '=' (codice ASCII 3Dh)
     MOV AH, 02h       ; Funzione di stampa
-    INT 21h           ; Stampa il carattere   
+    INT 21h           ; Stampa il carattere
+    
+    ; Stampa uno spazio
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio   
+    
+    MOV AX, RIS1
+    CALL Conversione 
+    
+    MOV AH, 09H
+    LEA DX, MSG_RIS
+    INT 21H
+    
+    JMP Fine
+    
+Stampa_ris_radice:
+MOV AH, 09H
+    LEA DX, MSG5
+    INT 21H
+
+    MOV DL, SEGNO1  
+    MOV AH, 02h   
+    INT 21h       
+    
+    MOV AX, VAR1
+    CALL Conversione
+    
+    ; Stampa uno spazio
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio ì
+
+    MOV DL, 3Dh       ; Carattere '=' (codice ASCII 3Dh)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa il carattere
+    
+    ; Stampa uno spazio
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio   
     
     MOV AX, RIS1
     CALL Conversione 
