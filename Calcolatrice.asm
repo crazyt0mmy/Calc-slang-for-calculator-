@@ -8,9 +8,7 @@
    SEGNO1 DB ?          
    SEGNO2 DB ?          
    OPERATORE DB ?       
-   RIS1 DW ?
-   NUM1 DW 1
-   NUM2 DW ?            
+   RIS1 DW ?          
    
    MSG_OPP1 DB 0Dh, 0Ah, 'Inserire quale operazione si vuole eseguire: $'
    MSG_OPP2 DB 0Dh, 0Ah, '[1] Addizione$'
@@ -20,12 +18,15 @@
    MSG_OPP6 DB 0Dh, 0Ah, '[5] Radice Quadrata$'
    MSG_OPP7 DB 0Dh, 0Ah, '[6] Radice Cubica$'
    MSG_OPP8 DB 0Dh, 0Ah, '[7] Logaritmo$'
-   MSG_OPP9 DB 0Dh, 0Ah, '[8] Potenza$'
+   MSG_OPP9 DB 0Dh, 0Ah, '[8] Esponenziale$'
    MSG1 DB 0Dh, 0Ah, 'Inserire il primo numero: $'
    MSG2 DB 0Dh, 0Ah, 'Inserire il secondo numero: $'
    MSG3 DB 0Dh, 0Ah, 'Inserire il segno del primo numero (+,-): $'
    MSG4 DB 0Dh, 0Ah, 'Inserire il segno del secondo numero (+,-): $'
-   MSG5 DB 0Dh, 0Ah, 'Radice quadrata di $'
+   MSG5 DB 0Dh, 0Ah, 'Radice quadrata di $' 
+   MSG6 DB 0Dh, 0Ah, 'Inserire la base: $'
+   MSG7 DB 0Dh, 0Ah, 'Inserire esponente:$'
+   MSG8 DB 0Dh, 0Ah, 'elevato a $'
    MSG_RIS DB 0Dh, 0Ah, '+--------------------------+ $'
    MSG_ERR1 DB 0Dh, 0Ah, 'Operatore errato, inserirne un operatore valido: $'
    CONTORNO DB '------------------------CALCOLATRICE------------------------$'    
@@ -107,7 +108,7 @@ Richiedi_Operatore:
     JE Leggi_Numeri
       
     CMP AL, '8'
-    JE Leggi_Numeri
+    JE Esponenziale
     
     MOV AH, 09H
     LEA DX, MSG_ERR1
@@ -417,10 +418,75 @@ Fine_Radice:
     POP CX
     POP BX
     JMP Stampa_ris_radice   ; Vai alla stampa del risultato
+
+; Procedure per la radice cubica
     
 Radice3:
-
+    PUSH BX          ; Salva i registri che useremo
+    PUSH CX
+    PUSH DX
     
+    MOV AX, VAR1     ; Numero di cui calcolare la radice cubica
+    MOV BX, 1        ; Contatore che incrementeremo (la nostra X)
+    
+Ciclo_Radice3:
+    MOV AX, BX       ; Metti il contatore in AX per la moltiplicazione
+    IMUL BX          ; AX = BX * BX (quadrato del contatore)
+    IMUL BX          ; AX = BX * BX * BX (cubo del contatore)
+    
+    CMP AX, VAR1     ; Confronta il cubo con il numero originale
+    JA Trovato3      ; Se è maggiore, abbiamo superato la radice
+    JE Trovato3_Esatto; Se è uguale, abbiamo trovato la radice esatta
+    
+    INC BX           ; Incrementa il contatore
+    JMP Ciclo_Radice3 ; Continua il ciclo
+    
+Trovato3_Esatto:
+    MOV RIS1, BX     ; Salva il risultato
+    JMP Fine_Radice3
+    
+Trovato3:
+    DEC BX           ; Decrementa BX per ottenere l'ultimo valore valido
+    MOV RIS1, BX     ; Salva il risultato
+    
+Fine_Radice3:
+    POP DX           ; Ripristina i registri
+    POP CX
+    POP BX
+    JMP Stampa_ris_radice   ; Vai alla stampa del risultato
+
+;------------------------------------------------------------------------------- 
+;Esponenziale
+;-------------------------------------------------------------------------------
+Esponenziale:
+    MOV AH, 09H
+    LEA DX, MSG6      ; Stampa messaggio "Inserisci la base: "
+    INT 21H
+    CALL LeggiNumero  ; Legge il numero inserito dall'utente
+    MOV VAR1, AX      ; Salva la base in VAR1
+    
+    MOV AH, 09H
+    LEA DX, MSG7      ; Stampa messaggio "Inserisci l'esponente: "
+    INT 21H
+    CALL LeggiNumero  ; Legge il numero inserito dall'utente
+    MOV VAR2, AX      ; Salva l'esponente in VAR2
+
+    PUSH BX
+    PUSH CX
+
+    ; Inizializzazione
+    MOV AX, 1         ; Il risultato parte da 1
+    MOV BX, VAR1      ; BX = base
+    MOV CX, VAR2      ; CX = esponente
+
+    CMP CX, 0         ; Se esponente = 0, salta alla stampa diretta di "1"
+    JE Stampa_ris_esp 
+
+Ciclo_esp:
+    MUL BX            ; AX = AX * base
+    DEC CX            ; Decrementa CX (esponente)
+    JNZ Ciclo_esp     ; Se CX diverso da 0, continua il ciclo
+    JMP Stampa_ris_esp
 ;------------------------------------------------------------------------------- 
 ;Stampa del risultato
 ;------------------------------------------------------------------------------- 
@@ -519,10 +585,18 @@ Stampa_ris:
     LEA DX, MSG_RIS
     INT 21H
     
-    JMP Fine
+    JMP Fine 
     
+;------------------------------------------------------------------------------- 
+;Stampa del risultato per le radici
+;------------------------------------------------------------------------------- 
+   
 Stampa_ris_radice:
-MOV AH, 09H
+    MOV AH, 09H
+    LEA DX, MSG_RIS
+    INT 21H
+    
+    MOV AH, 09H
     LEA DX, MSG5
     INT 21H
 
@@ -536,7 +610,7 @@ MOV AH, 09H
     ; Stampa uno spazio
     MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
     MOV AH, 02h       ; Funzione di stampa
-    INT 21h           ; Stampa lo spazio ì
+    INT 21h           ; Stampa lo spazio 
 
     MOV DL, 3Dh       ; Carattere '=' (codice ASCII 3Dh)
     MOV AH, 02h       ; Funzione di stampa
@@ -555,10 +629,72 @@ MOV AH, 09H
     INT 21H
     
     JMP Fine
-                  
+
+;------------------------------------------------------------------------------- 
+;Stampa del risultato per esponenziale
+;-------------------------------------------------------------------------------    
+    
+Stampa_ris_esp:
+    MOV RIS1, AX      ; Salva il risultato
+
+    MOV AH, 09H
+    LEA DX, MSG_RIS
+    INT 21H
+    
+     
+     ; Vai a capo (Carriage Return + Line Feed)
+    MOV DL, 0Dh        ; Carriage Return (CR)
+    MOV AH, 02h        ; Funzione di stampa
+    INT 21h            ; Stampa il carattere (CR)
+    
+    MOV DL, 0Ah        ; Line Feed (LF)
+    MOV AH, 02h        ; Funzione di stampa
+    INT 21h            ; Stampa il carattere (LF)
+
+    MOV AX, VAR1
+    CALL Conversione  ; Stampa la base
+    
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio 
+    
+    MOV DL, 5Eh       ; Carattere '^' (codice ASCII 5Eh)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa il carattere
+    
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio 
+    
+    MOV AX, VAR2
+    CALL Conversione  ; Stampa l'esponente
+    
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio 
+    
+    MOV DL, 3Dh       ; Carattere '=' (codice ASCII 3Dh)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa il carattere
+    
+    MOV DL, 20h       ; Carattere ASCII per lo spazio (20h)
+    MOV AH, 02h       ; Funzione di stampa
+    INT 21h           ; Stampa lo spazio  
+    
+    MOV AX, RIS1
+    CALL Conversione  ; Stampa la base
+    
+    MOV AH, 09H
+    LEA DX, MSG_RIS
+    INT 21H
+    
+
+    JMP Fine
+
 Fine:
     MOV AH, 4CH        
     INT 21h  
+
 
 ;-------------------------------------------------------------------------------
 ;Procedure di supporto 
