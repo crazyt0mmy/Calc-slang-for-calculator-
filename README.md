@@ -6,10 +6,12 @@ Four basic operations: Finished!
 
 Graphic interface: Finished!
 
-Root: In making
+Square root: Finished!
 
-Square: In making
+Cube root: Finished!
 
-Exponential: In making
+Logarithm: In making
+
+Exponential: Finished!
 
 Stay tuned for new releases. ;)
