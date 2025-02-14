@@ -29,20 +29,25 @@
    MSG8 DB 0Dh, 0Ah, 'elevato a $'   
    MSG9 DB 0Dh, 0Ah, 'Inserire la base del logaritmo: $' 
    MSG10 DB 0Dh, 0Ah, 'Il logaritmo in base $'
-   MSG_RIS DB 0Dh, 0Ah, '+--------------------------------+ $'
+   MSG_RIS DB 0Dh, 0Ah, '+--------------------------------+ $'                  ; Contorno
    MSG_ERR1 DB 0Dh, 0Ah, 'Operatore errato, inserirne un operatore valido: $'
-   CONTORNO DB '------------------------CALCOLATRICE------------------------$'    
+   CONTORNO DB '------------------------CALCOLATRICE------------------------$'  ; Titolo della calcolatrice    
    
     
    
 .CODE
-.STARTUP 
-    MOV AX, @DATA
-    MOV DS, AX 
+.STARTUP
+     
+    MOV AX, @DATA             ; Prende l'indirizzo della memoria dei dati e lo mette in AX
+    MOV DS, AX                ; Memorizza l'indirizzo in DS per accedere ai dati
+          
+    MOV AX,3                  ; Pulisce lo schermo in caso l'utente voglia usare la calcolatrice ancora
+    INT 10H                   ; Serve per controllare le funzioni video del BIOS
     
     MOV AH, 09H
     LEA DX, CONTORNO
-    INT 21H      
+    INT 21H                   ; Stampa la scritta iniziale della calcolatrice
+        
     
 ;-------------------------------------------------------------------------------
 ;Richiesta operatore per operazione
@@ -52,13 +57,13 @@ Richiedi_Operatore:
     
     MOV AH, 09H
     LEA DX, MSG_OPP2
-    INT 21H 
+    INT 21H                   ; Stampa le varie scielte delle operazioni
     
     MOV AH, 09H
     LEA DX, MSG_OPP3
     INT 21H 
     
-    MOV AH, 09H
+    MOV AH, 09H                             
     LEA DX, MSG_OPP4
     INT 21H 
     
@@ -83,37 +88,38 @@ Richiedi_Operatore:
     
     MOV AH, 09H
     LEA DX, MSG_OPP1
-    INT 21H 
+    INT 21H                   ; Stampa il mesaggio per scegliere l'operazione da eseguire
     
-    MOV AH, 01H
-    INT 21H
-    MOV OPERATORE, AL    
+    MOV AH, 01H               ; Funzione per leggere un carattere
+    INT 21H                   ; Chiama DOS (il sistema operativo su cui gira il programma) per ottenere il carattere
+    MOV OPERATORE, AL         ; Salva il carattere nella variabile   
     
-    CMP AL, '1'
-    JE Leggi_Numeri
+    CMP AL, '1'               ; Controlla se e' presente 1 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Leggi_Numeri           ; Salta alla lettura dei numeri 
      
-    CMP AL, '2'
-    JE Leggi_Numeri
+    CMP AL, '2'               ; Controlla se e' presente 2 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Leggi_Numeri           ; Salta alla lettura dei numeri 
     
-    CMP AL, '3'
-    JE Leggi_Numeri 
+    CMP AL, '3'               ; Controlla se e' presente 3 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Leggi_Numeri           ; Salta alla lettura dei numeri 
     
-    CMP AL, '4'
-    JE Leggi_Numeri 
+    CMP AL, '4'               ; Controlla se e' presente 4 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Leggi_Numeri           ; Salta alla lettura dei numeri 
       
-    CMP AL, '5'
-    JE Radice2
+    CMP AL, '5'               ; Controlla se e' presente 1 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Radice2                ; Salta alla lettura dei numeri 
       
-    CMP AL, '6'
-    JE Radice3
+    CMP AL, '6'               ; Controlla se e' presente 1 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Radice3                ; Salta alla lettura dei numeri 
       
-    CMP AL, '7'
-    JE Log
+    CMP AL, '7'               ; Controlla se e' presente 1 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Log                    ; Salta alla lettura dei numeri 
       
-    CMP AL, '8'
-    JE Esponenziale
+    CMP AL, '8'               ; Controlla se e' presente 1 in AL, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Esponenziale           ; Salta al esecuzione del esponenziale 
     
-    MOV AH, 09H
+    ; Se nessun JE viene eseguito questo codice per far selezionare di nuovo l'operatore
+    MOV AH, 09H               ; Stampa il mesaggio di richesta per inserire di nuovo l'operatore
     LEA DX, MSG_ERR1
     INT 21H
     JMP Richiedi_Operatore
@@ -122,261 +128,258 @@ Richiedi_Operatore:
 ;Lettura dei numeri e rispettivo segno 
 ;-------------------------------------------------------------------------------
 
-Leggi_Numeri:
+Leggi_Numeri:                 ; Stampa la richiesta del primo segno
     MOV AH, 09H
     LEA DX, MSG3
     INT 21H
-    
-    MOV AH, 01H
-    INT 21H
+                              ; Legge il primo segno
+    MOV AH, 01H               ; Chiama DOS per il carattere
+    INT 21H                   ; Salva il carattere nella variabile
     MOV SEGNO1, AL
 
-    MOV AH, 09H
+    MOV AH, 09H               ; Stampa la richiesta per il primo numero
     LEA DX, MSG1
     INT 21H
-    CALL LeggiNumero
-    MOV VAR1, AX
+    CALL LeggiNumero          ; Chiamata della funziona LeggiNumero per leggere numeri a piu' cifre
+    MOV VAR1, AX              ; Salva il numero nella variabile 
     
-    MOV AH, 09H
+    MOV AH, 09H               ; Stampa la richesta del secondo segno
     LEA DX, MSG4
     INT 21H
     
-    MOV AH, 01H
-    INT 21H
-    MOV SEGNO2, AL     
+    MOV AH, 01H               ; Legge il secondo segno
+    INT 21H                   ; Chiama DOS per il carattere
+    MOV SEGNO2, AL            ; Salva il carattere nella variabile
     
-    MOV AH, 09H
+    MOV AH, 09H               ; Stampa la richiesta per il secondo numero
     LEA DX, MSG2
     INT 21H
-    CALL LeggiNumero
-    MOV VAR2, AX
+    CALL LeggiNumero          ; Chiamata della funziona LeggiNumero per leggere numeri a piu' cifre
+    MOV VAR2, AX              ; Salva il numero nella variabile
     
-    MOV AL, OPERATORE
+    CMP OPERATORE, '1'        ; Controlla se e' presente 1 in OPERATORE, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Addizione              ; Salta al esecuzione del addizione 
+                             
+    CMP OPERATORE, '2'        ; Controlla se e' presente 2 in OPERATORE, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Sottrazione            ; Salta al esecuzione del sottrazione 
     
-    CMP OPERATORE, '1'
-    JE Addizione 
+    CMP OPERATORE, '3'        ; Controlla se e' presente 3 in OPERATORE, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Moltiplicazione        ; Salta al esecuzione del moltiplicazione 
     
-    CMP OPERATORE, '2'
-    JE Sottrazione
-    
-    CMP OPERATORE, '3'
-    JE Moltiplicazione 
-    
-    CMP OPERATORE, '4'
-    JE Divisione 
+    CMP OPERATORE, '4'        ; Controlla se e' presente 4 in OPERATORE, in caso ci fosse verra' eseguito JE (jump equal)
+    JE Divisione              ; Salta al esecuzione del divisione 
     
 ;-------------------------------------------------------------------------------
 ;Addizione
 ;-------------------------------------------------------------------------------
 
 Addizione: 
-    PUSH CX
-    PUSH BX
-    MOV CX, 0 
-    MOV BX, 0
+    PUSH CX                   ; Salva lo stato di CX
+    PUSH BX                   ; Salva lo stato di BX
+    MOV CX, 0                 ; Svuota CX per eseguire le operazioni
+    MOV BX, 0                 ; Svuota BX per eseguire le operazioni
     
-    MOV BX, VAR1
-    MOV CX, VAR2
-    CMP SEGNO1, '-'
-    JE PrimoNegativo
-    CMP SEGNO2, '-'
-    JE SecondoNegativo
+    MOV BX, VAR1              ; Muove in BX il primo numero per eseguire le operazioni
+    MOV CX, VAR2              ; Muove in CX il primo numero per eseguire le operazioni
+    CMP SEGNO1, '-'           ; Controlla se il primo numero e' negativo
+    JE PrimoNegativo          ; Salta all operazaione con il primo numero negativo
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero e' negativo
+    JE SecondoNegativo        ; Salta all operazaione con il secodo numero negativo
     
     ; Caso 1: Entrambi positivi
-    ADD BX, CX 
-    MOV RIS1, BX
-    JMP FineAddizione
+    ADD BX, CX                ; Vengono sommati i due numeri
+    MOV RIS1, BX              ; La somma viene salvata in RIS1
+    JMP FineAddizione         ; Salta a FineAddizione oer stampare il risultato
     
 PrimoNegativo:
-    CMP SEGNO2, '-'
-    JE EntrambiNegativi
+    CMP SEGNO2, '-'           ; Controlla se anche il secondo segno e' negativo 
+    JE EntrambiNegativi       ; In caso fosse negativo salta all'operazione con entrambi i numeri negativi 
     
     ; Caso 2: Primo negativo, secondo positivo 
-    NEG BX
-    ADD CX, BX
-    MOV RIS1, CX
-    JMP FineAddizione
+    NEG BX                    ; Il primo numero viene reso negativo
+    ADD CX, BX                ; I due numeri vengono sommati 
+    MOV RIS1, CX              ; La somma viene salvata in RIS1                                                                           
+    JMP FineAddizione         ; Salta a FineAddizione per stampare il risultato
     
 SecondoNegativo:
     ; Caso 3: Primo positivo, secondo negativo 
-    NEG CX
-    ADD BX, CX 
-    MOV RIS1, BX
-    JMP FineAddizione
+    NEG CX                    ; Il secondo numero viene reso negativo
+    ADD BX, CX                ; I due numeri vengono sommati
+    MOV RIS1, BX              ; La somma viene salvata in RIS1               
+    JMP FineAddizione         ; Salta a FineAddizione per stampare il risultato
     
 EntrambiNegativi:
     ; Caso 4: Entrambi negativi 
-    NEG BX 
-    NEG CX
-    ADD BX, CX
-    MOV RIS1, BX
+    NEG BX                    ; Il primo numero viene reso negativo
+    NEG CX                    ; Il secondo numero viene reso negativo
+    ADD BX, CX                ; I due numeri vengono sommati
+    MOV RIS1, BX              ; La somma viene salvata in RIS1   
     
-FineAddizione: 
-    POP BX
-    POP CX
-    JMP Conv_opp  
+FineAddizione:                ; Il salto di fine operazione porta qui 
+    POP BX                    ; Viene ripristinato il valore di BX
+    POP CX                    ; Viene ripristinato il valore di CX
+    JMP Conv_opp              ; Salto per stampare il risultato 
     
 ;-------------------------------------------------------------------------------
 ;Sottrazione
 ;------------------------------------------------------------------------------- 
       
 Sottrazione:  
-    PUSH CX
-    PUSH BX
-    MOV BX, 0
-    MOV CX, 0
+    PUSH CX                   ; Salva lo stato di CX
+    PUSH BX                   ; Salva lo stato di BX
+    MOV BX, 0                 ; Svuota BX per eseguire le operazioni
+    MOV CX, 0                 ; Svuota CX per eseguire le operazioni
     
-    MOV BX, VAR1 
-    MOV CX, VAR2
-    CMP SEGNO1, '-'
-    JE PrimoNegativo2
-    CMP SEGNO2, '-'
-    JE SecondoNegativo2
+    MOV BX, VAR1              ; Muove in BX il primo numero per eseguire le operazioni
+    MOV CX, VAR2              ; Muove in CX il primo numero per eseguire le operazioni
+    CMP SEGNO1, '-'           ; Controlla se il primo numero e' negativo
+    JE PrimoNegativo2         ; Salta all operazaione con il primo numero negativo
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero e' negativo
+    JE SecondoNegativo2       ; Salta all operazaione con il secondo numero negativo
     
     ; Caso 1: Entrambi positivi
-    SUB BX, CX 
-    MOV RIS1, BX
-    JMP FineSottrazione
+    SUB BX, CX                ; Vengono sottratti i due numeri
+    MOV RIS1, BX              ; Il risulato viene salvato in RIS1
+    JMP FineSottrazione       ; Salta a FineSottrazione per stampare il risultato
     
-PrimoNegativo2:
-    CMP SEGNO2, '-'
-    JE EntrambiNegativi2
+PrimoNegativo2:               
+    CMP SEGNO2, '-'           ; Controlla se anche il secondo segno e' negativo 
+    JE EntrambiNegativi2      ; In caso fosse negativo salta all'operazione con entrambi i numeri negativi 
     
     ; Caso 2: Primo negativo, secondo positivo 
-    NEG BX
-    SUB CX, BX
-    NEG CX
-    MOV RIS1, CX
-    JMP FineSottrazione
+    NEG BX                    ; Il primo numero viene reso negativo
+    SUB CX, BX                ; Vengono stotratti i due numeri
+    NEG CX                    ; Il risultato viene reso negativo 
+    MOV RIS1, CX              ; Il risulato viene salvato in RIS1
+    JMP FineSottrazione       ; Salta a FineSottrazione per stampare il risultato
     
 SecondoNegativo2:
     ; Caso 3: Primo positivo, secondo negativo 
-    ADD BX, CX 
-    MOV RIS1, BX
-    JMP FineSottrazione
+    ADD BX, CX                ; Viene fatta la somma perche' - * - = +
+    MOV RIS1, BX              ; Il risultato viene spostatin in RIS1
+    JMP FineSottrazione       ; Salta a FineSottrazione per stampare il risultato
     
 EntrambiNegativi2:
     ; Caso 4: Entrambi negativi 
-    NEG BX
-    ADD BX, CX
-    MOV RIS1, BX
+    NEG BX                    ; Il primo numero viene reso negativo
+    ADD BX, CX                ; I due numeri vengono sommati
+    MOV RIS1, BX              ; Il risultato viene salvato in RIS1
     
-FineSottrazione: 
-    POP BX
-    POP CX
-    JMP Conv_opp  
+FineSottrazione:              ; Il salto di fine operazione porta qui 
+    POP BX                    ; Viene ripristinato il valore di BX
+    POP CX                    ; Viene ripristinato il valore di CX
+    JMP Conv_opp              ; Salto per stampare il risultato 
     
 ;-------------------------------------------------------------------------------
 ;Moltiplicazione
 ;------------------------------------------------------------------------------- 
   
 Moltiplicazione:
-    PUSH BX
-    PUSH CX
- 
-    MOV BX, 0
-    MOV CX, 0
-    
-    MOV BX, VAR1 
-    MOV CX, VAR2 
-    CMP SEGNO1, '-'
-    JE PrimoNegativo3
-    CMP SEGNO2, '-'
-    JE SecondoNegativo3 
-    
+    PUSH BX                   ; Salvo lo stato di BX
+    PUSH CX                   ; Salva lo stato di CX
+
+    MOV BX, 0                 ; Svuota BX per eseguire le operazioni
+    MOV CX, 0                 ; Svuota CX per eseguire le operazioni
+
+    MOV BX, VAR1              ; Muove in BX il primo numero per eseguire le operazioni
+    MOV CX, VAR2              ; Muove in CX il secondo numero per eseguire le operazioni
+    CMP SEGNO1, '-'           ; Controlla se il primo numero e' negativo
+    JE PrimoNegativo3         ; Salta all'operazione con il primo numero negativo
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero e' negativo
+    JE SecondoNegativo3       ; Salta all'operazione con il secondo numero negativo
+
     ; Caso 1: Entrambi positivi
-    MOV AX, BX       
-    IMUL CX      
-    MOV RIS1, AX     
-    JMP FineMoltiplicazione
-    
+    MOV AX, BX                ; Muove il primo numero in AX per fare la moltiplicazione
+    IMUL CX                   ; Moltiplica BX per CX, risultato in AX
+    MOV RIS1, AX              ; Muove il risultato in RIS1
+    JMP FineMoltiplicazione   ; Salta a FineMoltiplicazione per stampare il risultato
+
      ; Caso 2: Primo negativo, secondo positivo
 PrimoNegativo3:
-    CMP SEGNO2, '-'   
-    JE EntrambiNegativi3
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero e' negativo
+    JE EntrambiNegativi3      ; Se anche il secondo numero e' negativo, salta all'operazione con entrambi negativi
 
-    NEG BX            
-    MOV AX, BX        
-    IMUL CX       
-    MOV RIS1, AX     
-    JMP FineMoltiplicazione 
-    
+    NEG BX                    ; Rende negativo il primo numero
+    MOV AX, BX                ; Muove il primo numero in AX per fare la moltiplicazione
+    IMUL CX                   ; Moltiplica BX (negativo) per CX (positivo)
+    MOV RIS1, AX              ; Muove il risultato in RIS1
+    JMP FineMoltiplicazione   ; Salta a FineMoltiplicazione per stampare il risultato
+
     ; Caso 3: Primo positivo, secondo negativo
 SecondoNegativo3:
+    NEG BX                    ; Rende negativo il secondo numero
+    MOV AX, BX                ; Muove il secondo numero (negativo) in AX per fare la moltiplicazione
+    IMUL CX                   ; Moltiplica BX (negativo) per CX (positivo)
+    MOV RIS1, AX              ; Muove il risultato in RIS1
+    JMP FineMoltiplicazione   ; Salta a FineMoltiplicazione per stampare il risultato
 
-    NEG BX            
-    MOV AX, BX        
-    IMUL CX       
-    MOV RIS1, AX     
-    JMP FineMoltiplicazione 
-    
     ; Caso 4: Entrambi negativi
 EntrambiNegativi3:
-    MOV AX, BX        
-    IMUL CX        
-    MOV RIS1, AX      
-    
+    MOV AX, BX                ; Muove il primo numero in AX per fare la moltiplicazione
+    IMUL CX                   ; Moltiplica i due numeri negativi
+    MOV RIS1, AX              ; Muove il risultato in RIS1
+
 FineMoltiplicazione:
-    POP BX
-    POP CX
-         
-    JMP Conv_opp
+    POP BX                    ; Ripristina il valore di BX
+    POP CX                    ; Ripristina il valore di CX
+
+    JMP Conv_opp              ; Salto per stampare il risultato
     
 ;-------------------------------------------------------------------------------                                         
 ;Divisione
 ;------------------------------------------------------------------------------- 
    
 Divisione:
-    PUSH BX
-    PUSH CX
+    PUSH BX                   ; Salvo lo stato di BX
+    PUSH CX                   ; Salvo lo stato di CX
 
-    MOV BX, 0
-    MOV CX, 0
-    MOV DX, 0  
+    MOV BX, 0                 ; Svuota BX per eseguire le operazioni
+    MOV CX, 0                 ; Svuota CX per eseguire le operazioni
+    MOV DX, 0                 ; Svuota DX per gestire eventuali resto nella divisione
 
-    MOV BX, VAR1 
-    MOV CX, VAR2 
-    CMP SEGNO1, '-'
-    JE PrimoNegativo4
-    CMP SEGNO2, '-'
-    JE SecondoNegativo4
-    
+    MOV BX, VAR1              ; Muove il primo numero in BX per eseguire la divisione
+    MOV CX, VAR2              ; Muove il secondo numero in CX per eseguire la divisione
+    CMP SEGNO1, '-'           ; Controlla se il primo numero è negativo
+    JE PrimoNegativo4         ; Salta all'operazione con il primo numero negativo
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero è negativo
+    JE SecondoNegativo4       ; Salta all'operazione con il secondo numero negativo
+
     ; Caso 1: Entrambi positivi      
-    MOV AX, BX
-    IDIV CX
-    MOV RIS1, AX
-    JMP FineDivisione
-    
+    MOV AX, BX                ; Muove il primo numero in AX per eseguire la divisione
+    IDIV CX                   ; Esegui la divisione di AX per CX, risultato in AX e resto in DX
+    MOV RIS1, AX              ; Muove il quoziente in RIS1
+    JMP FineDivisione         ; Salta a FineDivisione per stampare il risultato
+
     ; Caso 2: Primo negativo, secondo positivo 
 PrimoNegativo4:
-    CMP SEGNO2, '-'   
-    JE EntrambiNegativi4
-            
-    MOV AX, BX        
-    IDIV CX
-    NEG AX       
-    MOV RIS1, AX     
-    JMP FineDivisione
-    
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero è negativo
+    JE EntrambiNegativi4      ; Se anche il secondo numero è negativo, salta all'operazione con entrambi negativi
+
+    MOV AX, BX                ; Muove il primo numero in AX per eseguire la divisione
+    IDIV CX                   ; Esegui la divisione di AX per CX, risultato in AX e resto in DX
+    NEG AX                    ; Rende negativo il quoziente
+    MOV RIS1, AX              ; Muove il risultato in RIS1
+    JMP FineDivisione         ; Salta a FineDivisione per stampare il risultato
+
     ; Caso 3: Primo positivo, secondo negativo
-SecondoNegativo4:    
-    NEG CX            
-    MOV AX, BX        
-    IDIV CX       
-    MOV RIS1, AX     
-    JMP FineDivisione
+SecondoNegativo4:
+    NEG CX                    ; Rende negativo il secondo numero
+    MOV AX, BX                ; Muove il primo numero in AX per eseguire la divisione
+    IDIV CX                   ; Esegui la divisione di AX per CX, risultato in AX e resto in DX
+    MOV RIS1, AX              ; Muove il quoziente in RIS1
+    JMP FineDivisione         ; Salta a FineDivisione per stampare il risultato
 
     ; Caso 4: Entrambi negativi
 EntrambiNegativi4:
-    MOV AX, BX        
-    IDIV CX        
-    MOV RIS1, AX      
-    
+    MOV AX, BX                ; Muove il primo numero in AX per eseguire la divisione
+    IDIV CX                   ; Esegui la divisione di AX per CX, risultato in AX e resto in DX
+    MOV RIS1, AX              ; Muove il quoziente in RIS1
+
 FineDivisione:
-    POP BX
-    POP CX
-         
-    JMP Conv_opp
+    POP BX                    ; Ripristina il valore di BX
+    POP CX                    ; Ripristina il valore di CX
+
+    JMP Conv_opp              ; Salto per stampare il risultato
  
 ;-------------------------------------------------------------------------------  
 ; Operazoini avanzate
@@ -385,86 +388,84 @@ FineDivisione:
 ;------------------------------------------------------------------------------- 
 ; Procedura per calcolare la radice quadrata
 Radice2:
-
-    MOV AH, 09H
-    LEA DX, MSG1
-    INT 21H
-    CALL LeggiNumero
-    MOV VAR1, AX
+    MOV AH, 09H            ; Mostra il messaggio
+    LEA DX, MSG1           ; Carica l'indirizzo del messaggio in DX
+    INT 21H                ; Interrompe per stampare il messaggio
+    CALL LeggiNumero       ; Chiede all'utente di inserire un numero
+    MOV VAR1, AX           ; Salva il numero inserito in VAR1
     
-    PUSH BX          ; Salva i registri che useremo
-    PUSH CX
-    PUSH DX
+    PUSH BX                ; Salva lo stato di BX
+    PUSH CX                ; Salva lo stato di CX
+    PUSH DX                ; Salva lo stato di DX
     
-    MOV AX, VAR1     ; Numero di cui calcolare la radice
-    MOV BX, 1        ; Contatore che incrementeremo (la nostra X)
+    MOV AX, VAR1           ; Muove il numero di cui calcolare la radice in AX
+    MOV BX, 1              ; Inizializza il contatore (X) a 1
     
 Ciclo_Radice:
-    MOV AX, BX       ; Metti il contatore in AX per la moltiplicazione
-    IMUL BX          ; AX = AX * BX (il quadrato del contatore)
+    MOV AX, BX             ; Metti il contatore in AX per la moltiplicazione
+    IMUL BX                ; Esegui AX = AX * BX (il quadrato del contatore)
     
-    CMP AX, VAR1     ; Confronta il quadrato con il numero originale
-    JA Trovato       ; Se è maggiore, abbiamo superato la radice
-    JE Trovato_Esatto; Se è uguale, abbiamo trovato la radice esatta
+    CMP AX, VAR1           ; Confronta il quadrato con il numero originale
+    JA Trovato             ; Se il quadrato è maggiore, abbiamo superato la radice
+    JE Trovato_Esatto      ; Se e' uguale, abbiamo trovato la radice esatta
     
-    INC BX           ; Incrementa il contatore
-    JMP Ciclo_Radice ; Continua il ciclo
+    INC BX                 ; Incrementa il contatore
+    JMP Ciclo_Radice       ; Continua il ciclo
     
 Trovato_Esatto:
-    MOV RIS1, BX     ; Salva il risultato
-    JMP Fine_Radice
+    MOV RIS1, BX           ; Se il quadrato e' uguale, salviamo il contatore come risultato
+    JMP Fine_Radice        ; Salta alla fine per stampare il risultato
     
 Trovato:
-    DEC BX           ; Decrementa BX per ottenere l'ultimo valore valido
-    MOV RIS1, BX     ; Salva il risultato
+    DEC BX                 ; Se il quadrato e' maggiore, decrementa il contatore per ottenere l'ultimo valore valido
+    MOV RIS1, BX           ; Salva il risultato in RIS1
     
 Fine_Radice:
-    POP DX           ; Ripristina i registri
-    POP CX
-    POP BX
-    JMP Stampa_ris_radice   ; Vai alla stampa del risultato
-
+    POP DX                 ; Ripristina il valore di DX
+    POP CX                 ; Ripristina il valore di CX
+    POP BX                 ; Ripristina il valore di BX
+    JMP Stampa_ris_radice  ; Vai alla procedura per stampare il risultato
 ; Procedure per la radice cubica
     
 Radice3:
-    MOV AH, 09H
-    LEA DX, MSG1
-    INT 21H
-    CALL LeggiNumero
-    MOV VAR1, AX 
+    MOV AH, 09H            ; Mostra il messaggio
+    LEA DX, MSG1           ; Carica l'indirizzo del messaggio in DX
+    INT 21H                ; Interrompe per stampare il messaggio
+    CALL LeggiNumero       ; Chiede all'utente di inserire un numero
+    MOV VAR1, AX           ; Salva il numero inserito in VAR1
     
-    PUSH BX          ; Salva i registri che useremo
-    PUSH CX
-    PUSH DX
+    PUSH BX                ; Salva lo stato di BX
+    PUSH CX                ; Salva lo stato di CX
+    PUSH DX                ; Salva lo stato di DX
     
-    MOV AX, VAR1     ; Numero di cui calcolare la radice cubica
-    MOV BX, 1        ; Contatore che incrementeremo (la nostra X)
+    MOV AX, VAR1           ; Muove il numero di cui calcolare la radice cubica in AX
+    MOV BX, 1              ; Inizializza il contatore (X) a 1
     
 Ciclo_Radice3:
-    MOV AX, BX       ; Metti il contatore in AX per la moltiplicazione
-    IMUL BX          ; AX = BX * BX (quadrato del contatore)
-    IMUL BX          ; AX = BX * BX * BX (cubo del contatore)
+    MOV AX, BX             ; Metti il contatore in AX per la moltiplicazione
+    IMUL BX                ; Esegui AX = BX * BX (quadrato del contatore)
+    IMUL BX                ; Esegui AX = BX * BX * BX (cubo del contatore)
     
-    CMP AX, VAR1     ; Confronta il cubo con il numero originale
-    JA Trovato3      ; Se è maggiore, abbiamo superato la radice
-    JE Trovato3_Esatto; Se è uguale, abbiamo trovato la radice esatta
+    CMP AX, VAR1           ; Confronta il cubo con il numero originale
+    JA Trovato3            ; Se il cubo è maggiore, abbiamo superato la radice cubica
+    JE Trovato3_Esatto     ; Se è uguale, abbiamo trovato la radice esatta
     
-    INC BX           ; Incrementa il contatore
-    JMP Ciclo_Radice3 ; Continua il ciclo
+    INC BX                 ; Incrementa il contatore
+    JMP Ciclo_Radice3      ; Continua il ciclo
     
 Trovato3_Esatto:
-    MOV RIS1, BX     ; Salva il risultato
-    JMP Fine_Radice3
+    MOV RIS1, BX           ; Se il cubo è uguale, salviamo il contatore come risultato
+    JMP Fine_Radice3       ; Salta alla fine per stampare il risultato
     
 Trovato3:
-    DEC BX           ; Decrementa BX per ottenere l'ultimo valore valido
-    MOV RIS1, BX     ; Salva il risultato
+    DEC BX                 ; Se il cubo è maggiore, decrementa il contatore per ottenere l'ultimo valore valido
+    MOV RIS1, BX           ; Salva il risultato in RIS1
     
 Fine_Radice3:
-    POP DX           ; Ripristina i registri
-    POP CX
-    POP BX
-    JMP Stampa_ris_radice   ; Vai alla stampa del risultato
+    POP DX                 ; Ripristina il valore di DX
+    POP CX                 ; Ripristina il valore di CX
+    POP BX                 ; Ripristina il valore di BX
+    JMP Stampa_ris_radice  ; Vai alla procedura per stampare il risultato
 
 ;------------------------------------------------------------------------------- 
 ;Logaritmo
@@ -538,37 +539,37 @@ Ciclo_esp:
 
 ;Convertire operatore nel segno adatto
 Conv_opp:
-    CMP OPERATORE, '1'
-    JE AD
+    CMP OPERATORE, '1'     ; Controlla se e' stata fatto un addizione
+    JE AD                  ; Salta a AD 
     
-    CMP OPERATORE, '2'
-    JE SO
+    CMP OPERATORE, '2'     ; Controlla se e' stata fatto una sottrazione
+    JE SO                  ; Salta a SO 
     
-    CMP OPERATORE, '3'
-    JE MU
+    CMP OPERATORE, '3'     ; Controlla se e' stata fatto un moltiplicazioe
+    JE MU                  ; Salta a MU
     
-    CMP OPERATORE, '4'
-    JE DV
+    CMP OPERATORE, '4'     ; Controlla se e' stata fatto una divisione
+    JE DV                  ; Salta a DV 
     
 AD:
-    MOV AL, '+'
-    MOV OPERATORE, AL
-    JMP Stampa_ris
+    MOV AL, '+'            ; Carica il segno + in AL
+    MOV OPERATORE, AL      ; Muove il segno caricato in AL per stamparlo
+    JMP Stampa_ris         ; Salta alla stampa del risultato
 SO: 
     MOV AL, '-'
-    MOV OPERATORE, AL
-    JMP Stampa_ris
-MU:
+    MOV OPERATORE, AL      ; Carica il segno - in AL
+    JMP Stampa_ris         ; Muove il segno caricato in AL per stamparlo
+MU:                        ; Salta alla stampa del risultato
     MOV AL, '*'
-    MOV OPERATORE, AL 
-    JMP Stampa_ris
-DV:    
+    MOV OPERATORE, AL      ; Carica il segno * in AL
+    JMP Stampa_ris         ; Muove il segno caricato in AL per stamparlo
+DV:                        ; Salta alla stampa del risultato
     MOV AL, '/'
-    MOV OPERATORE, AL
-    JMP Stampa_ris
-    
+    MOV OPERATORE, AL      ; Carica il segno / in AL
+    JMP Stampa_ris         ; Muove il segno caricato in AL per stamparlo
+                           ; Salta alla stampa del risultato
 Stampa_ris:
-    MOV AH, 09H
+    MOV AH, 09H        ; Stampa il contorno
     LEA DX, MSG_RIS
     INT 21H
     
@@ -581,11 +582,11 @@ Stampa_ris:
     MOV AH, 02h        ; Funzione di stampa
     INT 21h            ; Stampa il carattere (LF)
 
-    MOV DL, SEGNO1  
+    MOV DL, SEGNO1     ; Stampa il primo segno
     MOV AH, 02h   
-    INT 21h       
+    INT 21h           
     
-    MOV AX, VAR1
+    MOV AX, VAR1       ; Stampa il primo numero
     CALL Conversione
     
     ; Stampa uno spazio
@@ -593,7 +594,7 @@ Stampa_ris:
     MOV AH, 02h       ; Funzione di stampa
     INT 21h           ; Stampa lo spazio 
     
-    MOV DL, OPERATORE  
+    MOV DL, OPERATORE ; Stampa l'opeatore 
     MOV AH, 02h  
     INT 21h 
     
@@ -602,11 +603,11 @@ Stampa_ris:
     MOV AH, 02h       ; Funzione di stampa
     INT 21h           ; Stampa lo spazio     
     
-    MOV DL, SEGNO2  
+    MOV DL, SEGNO2    ; Stampa il secondo segno
     MOV AH, 02h   
     INT 21h       
     
-    MOV AX, VAR2
+    MOV AX, VAR2      ; Stampa il secondo numero
     CALL Conversione
     
     ; Stampa uno spazio
@@ -623,10 +624,10 @@ Stampa_ris:
     MOV AH, 02h       ; Funzione di stampa
     INT 21h           ; Stampa lo spazio   
     
-    MOV AX, RIS1
+    MOV AX, RIS1      ; Stampa il risultato
     CALL Conversione 
     
-    MOV AH, 09H
+    MOV AH, 09H       ; Stampa il contorno
     LEA DX, MSG_RIS
     INT 21H
     
@@ -798,74 +799,75 @@ Fine:
 ; Procedura per leggere i numeri
     
 LeggiNumero PROC 
-    PUSH BX         
-    PUSH CX
+    PUSH BX         ; Salva il registro BX (usato per accumulare il risultato)
+    PUSH CX         ; Salva il registro CX (usato come variabile temporanea)
     
-    MOV BX, 0       
+    MOV BX, 0      ; Inizializza BX a 0 (accumulatore per il numero)
     
 LeggiCifra:
-    MOV AH, 01h     
-    INT 21h
+    MOV AH, 01h    ; Interrompe per leggere un carattere (funzione INT 21h, AH = 01h)
+    INT 21h        ; Int 21h, funzione 01h legge un carattere da tastiera
     
-    CMP AL, 13      
-    JE FineLeggi
+    CMP AL, 13     ; Confronta AL (il carattere letto) con il valore 13 (carattere di ritorno a capo, Enter)
+    JE FineLeggi   ; Se è 13 (Enter), finisce la lettura
     
-    SUB AL, '0'     
-    MOV CL, AL
+    SUB AL, '0'    ; Converte il carattere ASCII in un numero (es. '5' diventa 5)
+    MOV CL, AL     ; Salva la cifra in CL (registro temporaneo)
     
-    MOV AX, 10      
-    MUL BX
-    MOV BX, AX
+    MOV AX, 10     ; Inizializza AX con 10 per moltiplicare per 10
+    MUL BX         ; Moltiplica BX (numero parziale) per 10
+    MOV BX, AX     ; Salva il risultato in BX (aggiorna il numero parziale)
     
-    ADD BL, CL      
-    JMP LeggiCifra
+    ADD BL, CL     ; Aggiunge la cifra letta a BL (l'ultima posizione del numero parziale)
+    JMP LeggiCifra ; Continua a leggere la prossima cifra
     
 FineLeggi:
-    MOV AX, BX      
+    MOV AX, BX     ; Salva il numero finale in AX
     
-    POP CX          
-    POP BX
-    RET
+    POP CX         ; Ripristina il valore di CX
+    POP BX         ; Ripristina il valore di BX
+    RET            ; Ritorna dalla procedura
 LeggiNumero ENDP
+
 
 ; Procedura per stampare numeri negativo
 
 Conversione PROC 
-    PUSH BX           
-    PUSH CX
-    PUSH DX
+    PUSH BX           ; Salva il registro BX
+    PUSH CX           ; Salva il registro CX
+    PUSH DX           ; Salva il registro DX
     
-    TEST AX, 8000h    
-    JZ NumeroPositivo    
+    TEST AX, 8000h    ; Testa il bit più significativo di AX (se è 1, il numero è negativo)
+    JZ NumeroPositivo ; Se il bit più significativo è 0, il numero è positivo, salta al caso positivo
     
-    PUSH AX           
-    MOV DL, '-'       
-    MOV AH, 02h       
-    INT 21h           
-    POP AX            
-    NEG AX            
+    PUSH AX           ; Salva AX (numero negativo) sulla pila
+    MOV DL, '-'       ; Carica il carattere '-' in DL (simbolo negativo)
+    MOV AH, 02h       ; Funzione INT 21h per stampare un carattere
+    INT 21h           ; Stampa il carattere '-'
+    POP AX            ; Ripristina AX (numero negativo)
+    NEG AX            ; Rende il numero positivo (negativo diventa positivo)
     
 NumeroPositivo:    
-    XOR CX, CX       
-    MOV BX, 10       
+    XOR CX, CX        ; Azzeramento di CX (contatore per le cifre)
+    MOV BX, 10        ; Imposta il divisore a 10 per ottenere le cifre
     
 DividiNum:
-    XOR DX, DX       
-    DIV BX           
-    ADD DX, 48       
-    PUSH DX          
-    INC CX           
-    OR AX, AX        
-    JNZ DividiNum    
+    XOR DX, DX        ; Azzeramento di DX (necessario per DIV)
+    DIV BX            ; Divide AX per 10 (AX = AX / 10, resto in DX)
+    ADD DX, 48        ; Converte il resto (digit) in un carattere ASCII (aggiungendo '0')
+    PUSH DX           ; Salva il carattere sulla pila
+    INC CX            ; Incrementa il contatore delle cifre
+    OR AX, AX         ; Verifica se il risultato della divisione è zero
+    JNZ DividiNum     ; Se AX non è zero, continua a dividere
     
 StampaNum:    
-    POP DX           
-    MOV AH, 02h      
-    INT 21h          
-    LOOP StampaNum   
+    POP DX            ; Preleva il carattere dalla pila
+    MOV AH, 02h       ; Funzione INT 21h per stampare un carattere
+    INT 21h           ; Stampa il carattere
+    LOOP StampaNum    ; Ripete per tutte le cifre (CX = numero di cifre)
     
-    POP DX           
-    POP CX
-    POP BX
-    RET              
+    POP DX            ; Ripristina il valore di DX
+    POP CX            ; Ripristina il valore di CX
+    POP BX            ; Ripristina il valore di BX
+    RET               ; Ritorna dalla procedura
 Conversione ENDP
