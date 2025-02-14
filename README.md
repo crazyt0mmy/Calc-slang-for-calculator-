@@ -10,7 +10,7 @@ Square root: Finished!
 
 Cube root: Finished!
 
-Logarithm: In making
+Logarithm: Finished!
 
 Exponential: Finished!
 
