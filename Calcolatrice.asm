@@ -339,9 +339,9 @@ Divisione:
 
     MOV BX, VAR1              ; Muove il primo numero in BX per eseguire la divisione
     MOV CX, VAR2              ; Muove il secondo numero in CX per eseguire la divisione
-    CMP SEGNO1, '-'           ; Controlla se il primo numero è negativo
+    CMP SEGNO1, '-'           ; Controlla se il primo numero e' negativo
     JE PrimoNegativo4         ; Salta all'operazione con il primo numero negativo
-    CMP SEGNO2, '-'           ; Controlla se il secondo numero è negativo
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero e' negativo
     JE SecondoNegativo4       ; Salta all'operazione con il secondo numero negativo
 
     ; Caso 1: Entrambi positivi      
@@ -352,8 +352,8 @@ Divisione:
 
     ; Caso 2: Primo negativo, secondo positivo 
 PrimoNegativo4:
-    CMP SEGNO2, '-'           ; Controlla se il secondo numero è negativo
-    JE EntrambiNegativi4      ; Se anche il secondo numero è negativo, salta all'operazione con entrambi negativi
+    CMP SEGNO2, '-'           ; Controlla se il secondo numero e' negativo
+    JE EntrambiNegativi4      ; Se anche il secondo numero e' negativo, salta all'operazione con entrambi negativi
 
     MOV AX, BX                ; Muove il primo numero in AX per eseguire la divisione
     IDIV CX                   ; Esegui la divisione di AX per CX, risultato in AX e resto in DX
@@ -406,7 +406,7 @@ Ciclo_Radice:
     IMUL BX                ; Esegui AX = AX * BX (il quadrato del contatore)
     
     CMP AX, VAR1           ; Confronta il quadrato con il numero originale
-    JA Trovato             ; Se il quadrato è maggiore, abbiamo superato la radice
+    JA Trovato             ; Se il quadrato e' maggiore, abbiamo superato la radice
     JE Trovato_Esatto      ; Se e' uguale, abbiamo trovato la radice esatta
     
     INC BX                 ; Incrementa il contatore
@@ -447,18 +447,18 @@ Ciclo_Radice3:
     IMUL BX                ; Esegui AX = BX * BX * BX (cubo del contatore)
     
     CMP AX, VAR1           ; Confronta il cubo con il numero originale
-    JA Trovato3            ; Se il cubo è maggiore, abbiamo superato la radice cubica
-    JE Trovato3_Esatto     ; Se è uguale, abbiamo trovato la radice esatta
+    JA Trovato3            ; Se il cubo e' maggiore, abbiamo superato la radice cubica
+    JE Trovato3_Esatto     ; Se e' uguale, abbiamo trovato la radice esatta
     
     INC BX                 ; Incrementa il contatore
     JMP Ciclo_Radice3      ; Continua il ciclo
     
 Trovato3_Esatto:
-    MOV RIS1, BX           ; Se il cubo è uguale, salviamo il contatore come risultato
+    MOV RIS1, BX           ; Se il cubo e' uguale, salviamo il contatore come risultato
     JMP Fine_Radice3       ; Salta alla fine per stampare il risultato
     
 Trovato3:
-    DEC BX                 ; Se il cubo è maggiore, decrementa il contatore per ottenere l'ultimo valore valido
+    DEC BX                 ; Se il cubo e' maggiore, decrementa il contatore per ottenere l'ultimo valore valido
     MOV RIS1, BX           ; Salva il risultato in RIS1
     
 Fine_Radice3:
@@ -491,7 +491,7 @@ Log:
 Ciclo_Log:
     CMP AX, VAR2      ; Confronta la potenza attuale con il numero
     JA Fine_Log       ; Se la potenza supera il numero, termina
-    JE Fine_Log       ; Se la potenza è uguale, termina
+    JE Fine_Log       ; Se la potenza e' uguale, termina
     
     MUL BX            ; AX = AX * base
     INC CX            ; Incrementa l'esponente
@@ -809,7 +809,7 @@ LeggiCifra:
     INT 21h        ; Int 21h, funzione 01h legge un carattere da tastiera
     
     CMP AL, 13     ; Confronta AL (il carattere letto) con il valore 13 (carattere di ritorno a capo, Enter)
-    JE FineLeggi   ; Se è 13 (Enter), finisce la lettura
+    JE FineLeggi   ; Se e' 13 (Enter), finisce la lettura
     
     SUB AL, '0'    ; Converte il carattere ASCII in un numero (es. '5' diventa 5)
     MOV CL, AL     ; Salva la cifra in CL (registro temporaneo)
@@ -837,8 +837,8 @@ Conversione PROC
     PUSH CX           ; Salva il registro CX
     PUSH DX           ; Salva il registro DX
     
-    TEST AX, 8000h    ; Testa il bit più significativo di AX (se è 1, il numero è negativo)
-    JZ NumeroPositivo ; Se il bit più significativo è 0, il numero è positivo, salta al caso positivo
+    TEST AX, 8000h    ; Testa il bit piu' significativo di AX (se e' 1, il numero e' negativo)
+    JZ NumeroPositivo ; Se il bit piu' significativo e' 0, il numero e' positivo, salta al caso positivo
     
     PUSH AX           ; Salva AX (numero negativo) sulla pila
     MOV DL, '-'       ; Carica il carattere '-' in DL (simbolo negativo)
@@ -848,17 +848,17 @@ Conversione PROC
     NEG AX            ; Rende il numero positivo (negativo diventa positivo)
     
 NumeroPositivo:    
-    XOR CX, CX        ; Azzeramento di CX (contatore per le cifre)
+    MOV CX, 0         ; Azzeramento di CX (contatore per le cifre)
     MOV BX, 10        ; Imposta il divisore a 10 per ottenere le cifre
     
 DividiNum:
-    XOR DX, DX        ; Azzeramento di DX (necessario per DIV)
+    MOV DX, 0         ; Azzeramento di DX (necessario per DIV)
     DIV BX            ; Divide AX per 10 (AX = AX / 10, resto in DX)
     ADD DX, 48        ; Converte il resto (digit) in un carattere ASCII (aggiungendo '0')
     PUSH DX           ; Salva il carattere sulla pila
     INC CX            ; Incrementa il contatore delle cifre
-    OR AX, AX         ; Verifica se il risultato della divisione è zero
-    JNZ DividiNum     ; Se AX non è zero, continua a dividere
+    OR AX, AX         ; Verifica se il risultato della divisione e' zero
+    JNZ DividiNum     ; Se AX non e' zero, continua a dividere
     
 StampaNum:    
     POP DX            ; Preleva il carattere dalla pila
